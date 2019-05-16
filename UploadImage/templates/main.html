@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load cache %}
+
+{% block head %}
+    <title>Главная</title>
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="row col-md-4">
+            <h2>Список картинок</h2>
+        </div>
+        <div class="container-fluid">
+            <ul>
+                {% for article in object_list %}
+                    <li>
+                        {% cache 500 images article.hash %}
+                            <a href="{% url 'image_page' article.hash %}">
+                                <img class="img-fluid" src="{% get_media_prefix %}{{ article.img }}" alt="No pic(("
+                                     style="max-height: 50px; max-width: 50px;">
+                            </a>
+                        {% endcache %}
+                    </li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+{% endblock %}

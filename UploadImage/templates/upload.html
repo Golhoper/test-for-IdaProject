@@ -1,0 +1,32 @@
+{% extends 'base.html' %}
+
+{% block head %}
+    <title>Загрузка файла</title>
+{% endblock %}
+
+{% block body %}
+    <div class="container-fluid">
+        <div class="row col-md-4">
+
+            {% if ArticleForm.errors %}
+                {% for error in ArticleForm.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <strong>{{ error|escape }}</strong>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
+            <form class="form-group" action="" method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                {% for field in ArticleForm %}
+                    <div class="form-group">
+                        {{ field.errors }}
+                        {{ field.label_tag }}
+                        {{ field }}
+                    </div>
+                {% endfor %}
+                <input class="btn btn-primary" type="submit" value="Подтвердить">
+            </form>
+        </div>
+    </div>
+{% endblock %}

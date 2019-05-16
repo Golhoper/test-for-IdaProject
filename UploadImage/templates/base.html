@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+{% load static %}
+
+<head>
+    {% block head %}
+    {% endblock %}
+
+    <link href="{% static 'bootstrap/starter-template.css' %}" rel="stylesheet">
+    <link href="{% static 'bootstrap/bootstrap.min.css' %}" rel="stylesheet">
+</head>
+
+<body>
+
+<nav class="navbar navbar-expand-md navbar-dark bg-dark fixed-top">
+
+    <a class="navbar-brand" href="{% url 'main' %}">Главная</a>
+
+    <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarsExampleDefault"
+            aria-controls="navbarsExampleDefault" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+    </button>
+
+    <div class="collapse navbar-collapse" id="navbarsExampleDefault">
+        <ul class="navbar-nav mr-auto">
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'upload' %}">Загрузить файл</a>
+            </li>
+        </ul>
+    </div>
+</nav>
+
+{% block body %}
+{% endblock %}
+
+<script async src="{% static 'bootstrap/jquery-3.3.1.slim.min.js' %}"></script>
+
+</body></html>
