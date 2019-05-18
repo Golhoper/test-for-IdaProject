@@ -1,14 +1,15 @@
-from django.shortcuts import render, HttpResponseRedirect, HttpResponse
-from django.views.generic import ListView, TemplateView, DetailView
-from .models import ImageModel
-from .forms import ArticleForm, ChangeParamsForm
-from PIL import Image
-import urllib, os, time, imagehash
-from io import BytesIO
 from django.core.files.temp import NamedTemporaryFile
 from django.core.files import File
-import base64
 from django.core.cache import cache
+from django.shortcuts import render, HttpResponseRedirect, HttpResponse
+from django.views.generic import ListView, TemplateView, DetailView
+
+import urllib, os, time, imagehash, base64
+from io import BytesIO
+from PIL import Image
+
+from .models import ImageModel
+from .forms import ArticleForm, ChangeParamsForm
 
 
 class ShowImage(DetailView):
