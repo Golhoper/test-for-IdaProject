@@ -16,7 +16,7 @@ class ArticleForm(forms.Form):
         if name and image:
             raise forms.ValidationError('Заполненным может быть только 1 поле')
 
-        if name == '' and image == None:
+        if name == '' and image is None:
             raise forms.ValidationError('Нужно ввести данные хотя бы в 1 поле')
 
 

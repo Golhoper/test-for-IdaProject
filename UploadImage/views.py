@@ -8,6 +8,7 @@ from io import BytesIO
 from django.core.files.temp import NamedTemporaryFile
 from django.core.files import File
 import base64
+from django.core.cache import cache
 
 
 class ShowImage(DetailView):
@@ -18,7 +19,6 @@ class ShowImage(DetailView):
         data = super().get_context_data(**kwargs)
         p = data.get('imagemodel').pk
         r_data = self.request.GET
-        width, height, size = 0, 0, 0
         err_mess = False
 
         form = ChangeParamsForm(data.get('view').request.GET)
@@ -38,27 +38,34 @@ class ShowImage(DetailView):
             if size in ('0', ''):
                 size = 0
 
-            gg = abs(int(width)), abs(int(height))
-            im = im.resize(gg, Image.ANTIALIAS)
-            buffered = BytesIO()
+            size = abs(int(size))
+            width = abs(int(width))
+            height = abs(int(height))
 
-            if int(size) == 0:
-                im.save(buffered, format="jpeg", quality=100)
-            else:
-                for x in range(91, 0, -10):
-                    buffered = BytesIO()
-                    im.save(buffered, format="jpeg", optimize=True, quality=x)
+            img_str = cache.get("{}_{}_{}_{}".format(p, width, height, size))
 
-                    if x == 1 or buffered.tell() < abs(int(size)):
-                        break
-                    else:
-                        buffered.close()
+            if not img_str:
+                im = im.resize((width, height), Image.ANTIALIAS)
+                buffered = BytesIO()
 
-            if buffered.tell() > abs(int(size)):
-                err_mess = """Максимально допустимое сжатие {} байтов, 
-                           поэтому не удалось достичь желаемого результата в {}.""".format(buffered.tell(),
-                                                                                           int(size))
-            img_str = str(base64.b64encode(buffered.getvalue()))[2:-1]
+                if size == 0:
+                    im.save(buffered, format="jpeg", quality=100)
+                else:
+                    for x in range(91, 0, -10):
+                        buffered = BytesIO()
+                        im.save(buffered, format="jpeg", optimize=True, quality=x)
+
+                        if x == 1 or buffered.tell() < size:
+                            break
+                        else:
+                            buffered.close()
+
+                if (buffered.tell() > size) and size != 0:
+                    err_mess = """Максимально допустимое сжатие до {} байтов, 
+                               поэтому не удалось достичь желаемого результата в {}.""".format(buffered.tell(),
+                                                                                               size)
+                img_str = str(base64.b64encode(buffered.getvalue()))[2:-1]
+                cache.set("{}_{}_{}_{}".format(p, width, height, size), img_str, 120)
 
             context = {'context': '',
                        'exp64': img_str,
@@ -116,9 +123,9 @@ class UploadPage(TemplateView):
 
             elif picture:
 
-                gg = form.files.get('picture')
+                obj = form.files.get('picture')
 
-                hash_img = str(imagehash.average_hash(Image.open(gg)))
+                hash_img = str(imagehash.average_hash(Image.open(obj)))
                 hash_time = str(hash(time.time()))
 
                 img_model.hash = hash_img + hash_time
