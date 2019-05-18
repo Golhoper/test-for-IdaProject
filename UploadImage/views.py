@@ -19,6 +19,7 @@ class ShowImage(DetailView):
         p = data.get('imagemodel').pk
         r_data = self.request.GET
         width, height, size = 0, 0, 0
+        err_mess = False
 
         form = ChangeParamsForm(data.get('view').request.GET)
 
@@ -26,17 +27,16 @@ class ShowImage(DetailView):
             way_to_pic = ImageModel.objects.get(hash=p).img.name
             im = Image.open('media/' + way_to_pic).convert('RGB')
 
-            if r_data:
-                width = r_data.get('width', im.width)
-                height = r_data.get('height', im.height)
-                size = r_data.get('size', 0)
+            width = r_data.get('width', im.width)
+            height = r_data.get('height', im.height)
+            size = r_data.get('size', 0)
 
-            if not isinstance(width, str):
+            if width in ('0', ''):
                 width = im.width
-            if not isinstance(height, str):
+            if height in ('0', ''):
                 height = im.height
-            if size != 0:
-                size = int(size)
+            if size in ('0', ''):
+                size = 0
 
             gg = abs(int(width)), abs(int(height))
             im = im.resize(gg, Image.ANTIALIAS)
@@ -47,13 +47,17 @@ class ShowImage(DetailView):
             else:
                 for x in range(91, 0, -10):
                     buffered = BytesIO()
-                    im.save(buffered, format="jpeg", quality=x)
+                    im.save(buffered, format="jpeg", optimize=True, quality=x)
 
-                    if x == 1 or buffered.tell() < size:
+                    if x == 1 or buffered.tell() < abs(int(size)):
                         break
                     else:
                         buffered.close()
 
+            if buffered.tell() > abs(int(size)):
+                err_mess = """Максимально допустимое сжатие {} байтов, 
+                           поэтому не удалось достичь желаемого результата в {}.""".format(buffered.tell(),
+                                                                                           int(size))
             img_str = str(base64.b64encode(buffered.getvalue()))[2:-1]
 
             context = {'context': '',
@@ -61,7 +65,8 @@ class ShowImage(DetailView):
                        'width': width,
                        'height': height,
                        'size': size,
-                       'ChangeParamsForm': form}
+                       'ChangeParamsForm': form,
+                       'err_mess': err_mess}
 
             return {'context': context}
 

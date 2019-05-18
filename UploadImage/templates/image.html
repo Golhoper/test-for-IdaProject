@@ -7,6 +7,13 @@
 
 {% block body %}
     <div class="container-fluid">
+        {% if context.err_mess %}
+            <div class="row col-6">
+                <div class="alert alert-secondary">
+                    {{ context.err_mess }}
+                </div>
+            </div>
+        {% endif %}
         <div class="row col-6">
             {% if context.ChangeParamsForm.errors %}
                 {% for error in context.ChangeParamsForm.non_field_errors %}
