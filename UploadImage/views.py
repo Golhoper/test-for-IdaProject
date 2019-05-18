@@ -1,12 +1,13 @@
-from django.shortcuts import render, HttpResponseRedirect
+from django.shortcuts import render, HttpResponseRedirect, HttpResponse
 from django.views.generic import ListView, TemplateView, DetailView
 from .models import ImageModel
-from .forms import ArticleForm
+from .forms import ArticleForm, ChangeParamsForm
 from PIL import Image
 import urllib, os, time, imagehash
-# from django.core.files.base import ContentFile
+from io import BytesIO
 from django.core.files.temp import NamedTemporaryFile
 from django.core.files import File
+import base64
 
 
 class ShowImage(DetailView):
@@ -19,23 +20,54 @@ class ShowImage(DetailView):
         r_data = self.request.GET
         width, height, size = 0, 0, 0
 
-        if r_data:
-            width = r_data.get('width', 0)
-            height = r_data.get('height', 0)
-            size = r_data.get('size', 0)
+        form = ChangeParamsForm(data.get('view').request.GET)
 
-            print(width)
-            print(height)
-            print(size)
+        if form.is_valid():
+            way_to_pic = ImageModel.objects.get(hash=p).img.name
+            im = Image.open('media/' + way_to_pic).convert('RGB')
 
-        context = ImageModel.objects.filter(hash=p)
+            if r_data:
+                width = r_data.get('width', im.width)
+                height = r_data.get('height', im.height)
+                size = r_data.get('size', 0)
 
-        context = {'context': context,
-                   'width': width,
-                   'height': height,
-                   'size': size}
+            if not isinstance(width, str):
+                width = im.width
+            if not isinstance(height, str):
+                height = im.height
+            if size != 0:
+                size = int(size)
 
-        return {'context': context}
+            gg = abs(int(width)), abs(int(height))
+            im = im.resize(gg, Image.ANTIALIAS)
+            buffered = BytesIO()
+
+            if int(size) == 0:
+                im.save(buffered, format="jpeg", quality=100)
+            else:
+                for x in range(91, 0, -10):
+                    buffered = BytesIO()
+                    im.save(buffered, format="jpeg", quality=x)
+
+                    if x == 1 or buffered.tell() < size:
+                        break
+                    else:
+                        buffered.close()
+
+            img_str = str(base64.b64encode(buffered.getvalue()))[2:-1]
+
+            context = {'context': '',
+                       'exp64': img_str,
+                       'width': width,
+                       'height': height,
+                       'size': size,
+                       'ChangeParamsForm': form}
+
+            return {'context': context}
+
+        else:
+            context = {'ChangeParamsForm': form}
+            return {'context': context}
 
 
 class MainPage(ListView):
@@ -66,8 +98,6 @@ class UploadPage(TemplateView):
                 im = Image.open(image_url[0])
                 hash_img = str(imagehash.average_hash(im))
                 hash_time = str(hash(time.time()))
-                # hash_filename = str(hash(fname))
-                # final_hash = hash_img + hash_time + hash_filename
                 final_hash = hash_img + hash_time
 
                 img_temp = NamedTemporaryFile(delete=True)
@@ -85,9 +115,7 @@ class UploadPage(TemplateView):
 
                 hash_img = str(imagehash.average_hash(Image.open(gg)))
                 hash_time = str(hash(time.time()))
-                # hash_filename = str(hash(form.cleaned_data["picture"]))
 
-                # img_model.hash = hash_img + hash_time + hash_filename
                 img_model.hash = hash_img + hash_time
                 img_model.img = form.cleaned_data["picture"]
                 img_model.save()

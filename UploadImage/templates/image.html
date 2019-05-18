@@ -7,13 +7,42 @@
 
 {% block body %}
     <div class="container-fluid">
-        <div class="row">
-
+        <div class="row col-6">
+            {% if context.ChangeParamsForm.errors %}
+                {% for error in context.ChangeParamsForm.non_field_errors %}
+                    <div class="alert alert-danger">
+                        <strong>{{ error|escape }}</strong>
+                    </div>
+                {% endfor %}
+            {% endif %}
         </div>
+
+        <form action="" method="get">
+            <div class="row">
+                {% for field in context.ChangeParamsForm %}
+                    <div class="col-sm-2">
+                        {{ field.label }}
+                        {{ field }}
+                    </div>
+                {% endfor %}
+                <div class="col-sm-2">
+                    <input class="btn btn-primary" type="submit" value="Модифицировать">
+                </div>
+            </div>
+        </form>
+
+        <hr>
+
         <div class="row">
-            {% for c in context %}
-                <img class="img-fluid" src="{% get_media_prefix %}{{ c.img }}" alt="da fak">
-            {% endfor %}
+            <span id="source" style="display:none">
+                data:image/png;base64,{{ context.exp64 }}
+            </span>
         </div>
     </div>
+    <script>
+        var image = new Image();
+        image.src = document.getElementById('source').innerHTML;
+        document.body.appendChild(image);
+    </script>
+
 {% endblock %}
