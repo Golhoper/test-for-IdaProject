@@ -104,26 +104,31 @@ class UploadPage(TemplateView):
             name = form.cleaned_data["name"]
             picture = form.cleaned_data["picture"]
             img_model = ImageModel()
+            err_mess = False
 
             if name:
 
                 image_url = urllib.urlretrieve(name)
                 fname = os.path.basename(name)
 
-                im = Image.open(image_url[0])
-                hash_img = str(imagehash.average_hash(im))
-                hash_time = str(hash(time.time()))
-                final_hash = hash_img + hash_time
+                try:
+                    im = Image.open(image_url[0])
+                    hash_img = str(imagehash.average_hash(im))
+                    hash_time = str(hash(time.time()))
+                    final_hash = hash_img + hash_time
 
-                img_temp = NamedTemporaryFile(delete=True)
-                img_temp.write(urllib.urlopen(name).read())
-                img_temp.flush()
+                    img_temp = NamedTemporaryFile(delete=True)
+                    img_temp.write(urllib.urlopen(name).read())
+                    img_temp.flush()
 
-                img_model.hash = final_hash
-                img_model.img.save(fname, File(img_temp))
+                    img_model.hash = final_hash
+                    img_model.img.save(fname, File(img_temp))
 
-                return HttpResponseRedirect('/')
-
+                    return HttpResponseRedirect('/')
+                except:
+                    err_mess = "В данной ссылке нет картинки"
+                    return render(request, 'upload.html', context={'ArticleForm': form,
+                                                                   'err_mess': err_mess})
             elif picture:
 
                 obj = form.files.get('picture')
