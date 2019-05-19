@@ -4,7 +4,9 @@ from django.core.cache import cache
 from django.shortcuts import render, HttpResponseRedirect, HttpResponse
 from django.views.generic import ListView, TemplateView, DetailView
 
-import urllib, os, time, imagehash, base64
+import urllib.request as urllib
+
+import os, time, imagehash, base64
 from io import BytesIO
 from PIL import Image
 
@@ -105,7 +107,7 @@ class UploadPage(TemplateView):
 
             if name:
 
-                image_url = urllib.request.urlretrieve(name)
+                image_url = urllib.urlretrieve(name)
                 fname = os.path.basename(name)
 
                 im = Image.open(image_url[0])
@@ -114,7 +116,7 @@ class UploadPage(TemplateView):
                 final_hash = hash_img + hash_time
 
                 img_temp = NamedTemporaryFile(delete=True)
-                img_temp.write(urllib.request.urlopen(name).read())
+                img_temp.write(urllib.urlopen(name).read())
                 img_temp.flush()
 
                 img_model.hash = final_hash
