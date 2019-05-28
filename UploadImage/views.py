@@ -88,6 +88,10 @@ class ShowImage(DetailView):
 class MainPage(ListView):
     template_name = 'main.html'
     model = ImageModel
+    paginate_by = 5
+
+    def get_queryset(self):
+        return ImageModel.objects.all()[:10]
 
 
 class UploadPage(TemplateView):
