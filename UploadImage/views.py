@@ -109,7 +109,7 @@ class UploadPage(TemplateView):
             picture = form.cleaned_data["picture"]
             img_model = ImageModel()
             err_mess = False
-
+            # s = ''
             if name:
 
                 image_url = urllib.urlretrieve(name)
