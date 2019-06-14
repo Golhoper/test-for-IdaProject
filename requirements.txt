@@ -8,3 +8,4 @@ PyWavelets==1.0.3
 scipy==1.2.1
 six==1.12.0
 sqlparse==0.3.0
+psycopg2>=2.7,<3.0
